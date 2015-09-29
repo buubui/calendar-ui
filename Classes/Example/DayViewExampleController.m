@@ -32,7 +32,7 @@
 // Uncomment the following line to use the built in calendar as a source for events:
 //#define USE_EVENTKIT_DATA_SOURCE 1
 
-#define DATE_COMPONENTS (NSYearCalendarUnit| NSMonthCalendarUnit | NSDayCalendarUnit | NSWeekCalendarUnit |  NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit | NSWeekdayCalendarUnit | NSWeekdayOrdinalCalendarUnit)
+#define DATE_COMPONENTS (NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay | NSCalendarUnitWeekOfYear |  NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond | NSCalendarUnitWeekday | NSCalendarUnitWeekdayOrdinal)
 #define CURRENT_CALENDAR [NSCalendar currentCalendar]
 
 @interface DayViewExampleController(PrivateMethods)
@@ -134,7 +134,7 @@ static NSDate *date = nil;
 
 - (void)dayView:(MADayView *)dayView eventTapped:(MAEvent *)event {
 	NSDateComponents *components = [CURRENT_CALENDAR components:DATE_COMPONENTS fromDate:event.start];
-	NSString *eventInfo = [NSString stringWithFormat:@"Hour %i. Userinfo: %@", [components hour], [event.userInfo objectForKey:@"test"]];
+	NSString *eventInfo = [NSString stringWithFormat:@"Hour %li. Userinfo: %@", (long)[components hour], [event.userInfo objectForKey:@"test"]];
 	
 	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:event.title
 													 message:eventInfo delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];

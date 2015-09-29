@@ -33,7 +33,7 @@
 // Uncomment the following line to use the built in calendar as a source for events:
 //#define USE_EVENTKIT_DATA_SOURCE 1
 
-#define DATE_COMPONENTS (NSYearCalendarUnit| NSMonthCalendarUnit | NSDayCalendarUnit | NSWeekCalendarUnit |  NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit | NSWeekdayCalendarUnit | NSWeekdayOrdinalCalendarUnit)
+#define DATE_COMPONENTS (NSCalendarUnitYear| NSCalendarUnitMonth | NSCalendarUnitDay | NSCalendarUnitWeekOfYear |  NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond | NSCalendarUnitWeekday | NSCalendarUnitWeekdayOrdinal)
 #define CURRENT_CALENDAR [NSCalendar currentCalendar]
 
 @interface WeekViewExampleController(PrivateMethods)
@@ -131,7 +131,7 @@ static int counter = 7 * 5;
 
 - (void)weekView:(MAWeekView *)weekView eventTapped:(MAEvent *)event {
 	NSDateComponents *components = [CURRENT_CALENDAR components:DATE_COMPONENTS fromDate:event.start];
-	NSString *eventInfo = [NSString stringWithFormat:@"Event tapped: %02i:%02i. Userinfo: %@", [components hour], [components minute], [event.userInfo objectForKey:@"test"]];
+	NSString *eventInfo = [NSString stringWithFormat:@"Event tapped: %02li:%02li. Userinfo: %@", (long)[components hour], (long)[components minute], [event.userInfo objectForKey:@"test"]];
 	
 	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:event.title
 													 message:eventInfo delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
@@ -140,7 +140,7 @@ static int counter = 7 * 5;
 
 - (void)weekView:(MAWeekView *)weekView eventDragged:(MAEvent *)event {
 	NSDateComponents *components = [CURRENT_CALENDAR components:DATE_COMPONENTS fromDate:event.start];
-	NSString *eventInfo = [NSString stringWithFormat:@"Event dragged to %02i:%02i. Userinfo: %@", [components hour], [components minute], [event.userInfo objectForKey:@"test"]];
+	NSString *eventInfo = [NSString stringWithFormat:@"Event dragged to %02li:%02li. Userinfo: %@", (long)[components hour], (long)[components minute], [event.userInfo objectForKey:@"test"]];
 	
 	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:event.title
                                                     message:eventInfo delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];

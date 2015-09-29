@@ -27,7 +27,7 @@
 
 #import "MAEvent.h"
 
-#define DATE_COMPONENTS (NSYearCalendarUnit| NSMonthCalendarUnit | NSDayCalendarUnit | NSWeekCalendarUnit |  NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit | NSWeekdayCalendarUnit | NSWeekdayOrdinalCalendarUnit)
+#define DATE_COMPONENTS (NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay | NSCalendarUnitWeekOfYear |  NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond | NSCalendarUnitWeekday | NSCalendarUnitWeekdayOrdinal)
 #define CURRENT_CALENDAR [NSCalendar currentCalendar]
 
 static const unsigned int MINUTES_IN_HOUR                = 60;
@@ -38,8 +38,8 @@ NSInteger MAEvent_sortByStartTime(id ev1, id ev2, void *keyForSorting) {
 	MAEvent *event1 = (MAEvent *)ev1;
 	MAEvent *event2 = (MAEvent *)ev2;
 				   
-	int v1 = [event1 minutesSinceMidnight];
-	int v2 = [event2 minutesSinceMidnight];
+	long v1 = [event1 minutesSinceMidnight];
+	long v2 = [event2 minutesSinceMidnight];
 	
 	if (v1 < v2) {
 		return NSOrderedAscending;
@@ -48,8 +48,8 @@ NSInteger MAEvent_sortByStartTime(id ev1, id ev2, void *keyForSorting) {
 	} else {
 		/* Event start time is the same, compare by duration.
 		 */
-		int d1 = [event1 durationInMinutes];
-		int d2 = [event2 durationInMinutes];
+		long d1 = [event1 durationInMinutes];
+		long d2 = [event2 durationInMinutes];
 		
 		if (d1 < d2) {
 			/*
@@ -81,8 +81,8 @@ NSInteger MAEvent_sortByStartTime(id ev1, id ev2, void *keyForSorting) {
 
 #define DATE_CMP(X, Y) ([X year] == [Y year] && [X month] == [Y month] && [X day] == [Y day])
 
-- (unsigned int)minutesSinceMidnight {
-	unsigned int fromMidnight = 0;
+- (unsigned long)minutesSinceMidnight {
+	unsigned long fromMidnight = 0;
 	
 	NSDateComponents *displayComponents = [CURRENT_CALENDAR components:DATE_COMPONENTS fromDate:_displayDate];
 	NSDateComponents *startComponents = [CURRENT_CALENDAR components:DATE_COMPONENTS fromDate:_start];
@@ -101,8 +101,8 @@ NSInteger MAEvent_sortByStartTime(id ev1, id ev2, void *keyForSorting) {
 	return fromMidnight;
 }
 
-- (unsigned int)durationInMinutes {
-	unsigned int duration = 0;
+- (unsigned long)durationInMinutes {
+	unsigned long duration = 0;
 	
 	NSDateComponents *displayComponents = [CURRENT_CALENDAR components:DATE_COMPONENTS fromDate:_displayDate];
 	NSDateComponents *startComponents = [CURRENT_CALENDAR components:DATE_COMPONENTS fromDate:_start];

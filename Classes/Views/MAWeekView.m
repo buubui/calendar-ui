@@ -51,7 +51,7 @@ static const unsigned int ARROW_WIDTH                         = 48;
 static const unsigned int ARROW_HEIGHT                        = 38;
 static const unsigned int TOP_BACKGROUND_HEIGHT               = 35;
 
-#define DATE_COMPONENTS (NSYearCalendarUnit| NSMonthCalendarUnit | NSDayCalendarUnit | NSWeekCalendarUnit |  NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit | NSWeekdayCalendarUnit | NSWeekdayOrdinalCalendarUnit)
+#define DATE_COMPONENTS (NSCalendarUnitYear| NSCalendarUnitMonth | NSCalendarUnitDay | NSCalendarUnitWeekOfYear |  NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond | NSCalendarUnitWeekday | NSCalendarUnitWeekdayOrdinal)
 #define CURRENT_CALENDAR [NSCalendar currentCalendar]
 
 @interface MAEventView : TapDetectingView <TapDetectingViewDelegate> {
@@ -123,13 +123,13 @@ static const unsigned int TOP_BACKGROUND_HEIGHT               = 35;
 @property (nonatomic, strong) UIFont *textFont;
 @property (nonatomic,copy) NSDate *week;
 
-- (void)addEventToOffset:(unsigned int)offset event:(MAEvent *)event;
+- (void)addEventToOffset:(unsigned long)offset event:(MAEvent *)event;
 - (void)resetCachedData;
 
 @end
 
 @interface MAGridView (MAWeekViewAdditions)
-- (void)addEventToOffset:(unsigned int)offset event:(MAEvent *)event weekView:(MAWeekView *)weekView;
+- (void)addEventToOffset:(unsigned long)offset event:(MAEvent *)event weekView:(MAWeekView *)weekView;
 @end
 
 @interface MAWeekView (PrivateMethods)
@@ -198,8 +198,8 @@ static const unsigned int TOP_BACKGROUND_HEIGHT               = 35;
 }
 
 - (void)layoutSubviews {
-	const CGSize sizeNecessary = [TEXT_WHICH_MUST_FIT sizeWithFont:self.regularFont];
-	const CGSize sizeNecessaryBold = [TEXT_WHICH_MUST_FIT sizeWithFont:self.boldFont];
+	const CGSize sizeNecessary = [TEXT_WHICH_MUST_FIT sizeWithAttributes: @{NSFontAttributeName : self.regularFont}];
+	const CGSize sizeNecessaryBold = [TEXT_WHICH_MUST_FIT sizeWithAttributes: @{NSFontAttributeName : self.boldFont}];
     
     self.topBackground.frame = CGRectMake(CGRectGetMinX(self.bounds),
 										  CGRectGetMinY(self.bounds),
@@ -287,7 +287,7 @@ static const unsigned int TOP_BACKGROUND_HEIGHT               = 35;
 - (UILabel *)dateLabel {
 	if (!_dateLabel) {
 		_dateLabel = [[UILabel alloc] init];
-		_dateLabel.textAlignment = UITextAlignmentCenter;
+		_dateLabel.textAlignment = NSTextAlignmentCenter;
 		_dateLabel.backgroundColor = [UIColor clearColor];
 		_dateLabel.font = [UIFont boldSystemFontOfSize:18];
 		_dateLabel.textColor = [UIColor colorWithRed:59/255. green:73/255. blue:88/255. alpha:1];
@@ -508,9 +508,9 @@ static const unsigned int TOP_BACKGROUND_HEIGHT               = 35;
 	
 	NSArray *monthSymbols = [formatter shortMonthSymbols];
 	
-	return [NSString stringWithFormat:@"%@, week %i",
+	return [NSString stringWithFormat:@"%@, week %li",
 			[monthSymbols objectAtIndex:[components month] - 1],
-			[components week]];
+			(long)[components weekOfYear]];
 }
 
 @end
@@ -550,16 +550,16 @@ static NSString const * const HOURS_24[] = {
 	[self.textColor set];
 	
 	for (i=1; i < HOURS_IN_DAY; i++) {
-		CGSize sizeNecessary = [HOURS[i] sizeWithFont:self.textFont];
+		CGSize sizeNecessary = [HOURS[i] sizeWithAttributes: @{NSFontAttributeName : self.textFont}];
 		CGRect rect = CGRectMake(CGRectGetMinX(self.bounds),
 								 (cellHeight * i) - (sizeNecessary.height / 2.f),
 								 sizeNecessary.width,
 								 sizeNecessary.height);
 		
-		[HOURS[i] drawInRect: rect
-					 withFont:self.textFont
-				lineBreakMode:UILineBreakModeTailTruncation
-					alignment:UITextAlignmentLeft]; 
+		NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle defaultParagraphStyle] mutableCopy];
+		paragraphStyle.lineBreakMode = NSLineBreakByTruncatingTail;
+		paragraphStyle.alignment = NSTextAlignmentLeft;
+		[HOURS[i] drawInRect:rect withAttributes: @{NSFontAttributeName: self.textFont, NSParagraphStyleAttributeName: paragraphStyle}];
 	}
 }
 
@@ -568,7 +568,7 @@ static NSString const * const HOURS_24[] = {
 
 @implementation MAGridView (MAWeekViewAdditions)
 
-- (void)addEventToOffset:(unsigned int)offset event:(MAEvent *)event weekView:(MAWeekView *)weekView {
+- (void)addEventToOffset:(unsigned long)offset event:(MAEvent *)event weekView:(MAWeekView *)weekView {
 	MAEventView *eventView = [[MAEventView alloc] init];
 	eventView.weekView = weekView;
 	eventView.event = event;
@@ -639,14 +639,14 @@ static NSString const * const HOURS_24[] = {
 	
 	NSArray *weekdaySymbols = [self.dateFormatter veryShortWeekdaySymbols];
 	CFCalendarRef currentCalendar = CFCalendarCopyCurrent();
-	int d = CFCalendarGetFirstWeekday(currentCalendar) - 1;
+	long d = CFCalendarGetFirstWeekday(currentCalendar) - 1;
 	CFRelease(currentCalendar);
 	
 	for (NSDate *date in _weekdays) {
 		NSDateComponents *components = [CURRENT_CALENDAR components:DATE_COMPONENTS fromDate:date];
-		NSString *displayText = [NSString stringWithFormat:@"%@ %i", [weekdaySymbols objectAtIndex:d], [components day]];
+		NSString *displayText = [NSString stringWithFormat:@"%@ %li", [weekdaySymbols objectAtIndex:d], (long)[components day]];
 		
-		CGSize sizeNecessary = [displayText sizeWithFont:self.textFont];
+		CGSize sizeNecessary = [displayText sizeWithAttributes: @{NSFontAttributeName : self.textFont}];
 		CGRect rect = CGRectMake(cellWidth * i + ((cellWidth - sizeNecessary.width) / 2.f),
 								 CGRectGetMinY(self.bounds),
 								 sizeNecessary.width,
@@ -661,12 +661,10 @@ static NSString const * const HOURS_24[] = {
 		} else {
 			[self.textColor set];
 		}
-		
-		[displayText drawInRect: rect
-					withFont:self.textFont
-			   lineBreakMode:UILineBreakModeTailTruncation
-				   alignment:UITextAlignmentLeft];
-		
+		NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle defaultParagraphStyle] mutableCopy];
+		paragraphStyle.lineBreakMode = NSLineBreakByTruncatingTail;
+		paragraphStyle.alignment = NSTextAlignmentLeft;
+		[displayText drawInRect:rect withAttributes: @{NSFontAttributeName: self.textFont, NSParagraphStyleAttributeName: paragraphStyle}];
 		d = (d+1) % 7;
 		i++;
 	}
@@ -744,7 +742,7 @@ static NSString const * const HOURS_24[] = {
 	}
 }
 
-- (void)addEventToOffset:(unsigned int)offset event:(MAEvent *)event {	
+- (void)addEventToOffset:(unsigned long)offset event:(MAEvent *)event {
 	MAEventView *eventView = [[MAEventView alloc] init];
 	
 	eventView.weekView = self.weekView;
@@ -816,11 +814,10 @@ static const CGFloat kCorner       = 5.0;
 
 - (void)drawRect:(CGRect)rect {
 	[self.textColor set];
-	
-	[self.title drawInRect:_textRect
-				withFont:self.textFont
-				lineBreakMode:UILineBreakModeTailTruncation
-				alignment:UITextAlignmentLeft];
+	NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle defaultParagraphStyle] mutableCopy];
+	paragraphStyle.lineBreakMode = NSLineBreakByTruncatingTail;
+	paragraphStyle.alignment = NSTextAlignmentLeft;
+	[self.title drawInRect:_textRect withAttributes: @{NSFontAttributeName: self.textFont, NSParagraphStyleAttributeName: paragraphStyle}];
 }
 
 - (void)tapDetectingView:(TapDetectingView *)view gotSingleTapAtPoint:(CGPoint)tapPoint {
@@ -904,7 +901,7 @@ static const CGFloat kCorner       = 5.0;
 		
 		/* Calculate the new time for the event */
 		
-		const int eventDurationInMinutes = [self.event durationInMinutes];
+		const long eventDurationInMinutes = [self.event durationInMinutes];
 		NSDate *weekday = [self.weekView.weekdayBarView.weekdays objectAtIndex:(int)round(posX)];
 		double hours;
 		double minutes;

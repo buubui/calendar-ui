@@ -46,7 +46,7 @@ static const unsigned int ARROW_WIDTH                    = 48;
 static const unsigned int ARROW_HEIGHT                   = 38;
 static const unsigned int TOP_BACKGROUND_HEIGHT          = 35;
 
-#define DATE_COMPONENTS (NSYearCalendarUnit| NSMonthCalendarUnit | NSDayCalendarUnit | NSWeekCalendarUnit |  NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit | NSWeekdayCalendarUnit | NSWeekdayOrdinalCalendarUnit)
+#define DATE_COMPONENTS (NSCalendarUnitYear| NSCalendarUnitMonth | NSCalendarUnitDay | NSCalendarUnitWeekOfYear |  NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond | NSCalendarUnitWeekday | NSCalendarUnitWeekdayOrdinal)
 #define CURRENT_CALENDAR [NSCalendar currentCalendar]
 
 @interface MADayEventView : TapDetectingView <TapDetectingViewDelegate> {
@@ -193,10 +193,11 @@ static const unsigned int TOP_BACKGROUND_HEIGHT          = 35;
 	self.allDayGridView.frame = CGRectMake(0, 0, // Top left corner of the scroll view
 										   CGRectGetWidth(self.bounds),
 										   ALL_DAY_VIEW_EMPTY_SPACE);
+
 	self.gridView.frame = CGRectMake(CGRectGetMinX(self.allDayGridView.bounds),
 									 CGRectGetMaxY(self.allDayGridView.bounds),
 									 CGRectGetWidth(self.bounds),
-									 [@"FOO" sizeWithFont:self.boldFont].height * SPACE_BETWEEN_HOUR_LABELS * HOURS_IN_DAY);
+									 [@"FOO" sizeWithAttributes: @{NSFontAttributeName : self.boldFont}].height * SPACE_BETWEEN_HOUR_LABELS * HOURS_IN_DAY);
 	
 	self.scrollView.frame = CGRectMake(CGRectGetMinX(self.bounds),
 									   CGRectGetMaxY(self.topBackground.bounds),
@@ -238,7 +239,7 @@ static const unsigned int TOP_BACKGROUND_HEIGHT          = 35;
 - (UILabel *)dateLabel {
 	if (!_dateLabel) {
 		_dateLabel = [[UILabel alloc] init];
-		_dateLabel.textAlignment = UITextAlignmentCenter;
+		_dateLabel.textAlignment = NSTextAlignmentCenter;
 		_dateLabel.backgroundColor = [UIColor clearColor];
 		_dateLabel.font = [UIFont boldSystemFontOfSize:18];
 		_dateLabel.textColor = [UIColor colorWithRed:59/255. green:73/255. blue:88/255. alpha:1];
@@ -262,7 +263,7 @@ static const unsigned int TOP_BACKGROUND_HEIGHT          = 35;
 		_allDayGridView.backgroundColor = [UIColor whiteColor];
 		_allDayGridView.dayView = self;
 		_allDayGridView.textFont = self.boldFont;
-		_allDayGridView.eventHeight = [@"FOO" sizeWithFont:self.regularFont].height * 2.f;
+		_allDayGridView.eventHeight = [@"FOO" sizeWithAttributes: @{NSFontAttributeName : self.regularFont}].height * 2.f;
 	}
 	return _allDayGridView;
 }
@@ -489,7 +490,7 @@ static const CGFloat kCorner       = 5.0;
 						   (int) (CGRectGetWidth(self.bounds) - 2*kCorner),
 						   (int) (CGRectGetHeight(self.bounds) - 2*kCorner));
 	
-	CGSize sizeNeeded = [self.title sizeWithFont:self.textFont];
+	CGSize sizeNeeded = [self.title sizeWithAttributes: @{NSFontAttributeName : self.textFont}];
 	
 	if (_textRect.size.height > sizeNeeded.height) {
 		_textRect.origin.y = (int) ((_textRect.size.height - sizeNeeded.height) / 2 + kCorner);
@@ -498,11 +499,10 @@ static const CGFloat kCorner       = 5.0;
 
 - (void)drawRect:(CGRect)rect {
 	[self.textColor set];
-	
-	[self.title drawInRect:_textRect
-				  withFont:self.textFont
-			 lineBreakMode:UILineBreakModeTailTruncation
-				 alignment:UITextAlignmentLeft];
+  NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle defaultParagraphStyle] mutableCopy];
+  paragraphStyle.lineBreakMode = NSLineBreakByTruncatingTail;
+  paragraphStyle.alignment = NSTextAlignmentLeft;
+  [self.title drawInRect:_textRect withAttributes: @{NSFontAttributeName: self.textFont, NSParagraphStyleAttributeName: paragraphStyle}];
 }
 
 - (void)tapDetectingView:(TapDetectingView *)view gotSingleTapAtPoint:(CGPoint)tapPoint {
@@ -646,7 +646,7 @@ static NSString const * const HOURS_24[] = {
 	register unsigned int i;
 	
 	for (i=0; i < HOURS_IN_DAY; i++) {
-		hourSize[i] = [HOURS[i] sizeWithFont:self.textFont];
+		hourSize[i] = [HOURS[i] sizeWithAttributes: @{NSFontAttributeName : self.textFont}];
 		totalTextHeight += hourSize[i].height;
 		
 		if (hourSize[i].width > maxTextWidth) {
@@ -674,7 +674,7 @@ static NSString const * const HOURS_24[] = {
 	_lineX = maxTextWidth + (maxTextWidth * 0.3);
 	
 	NSArray *subviews = self.subviews;
-	int max = [subviews count];
+	long max = [subviews count];
 	MADayEventView *curEv = nil, *prevEv = nil, *nextEv = nil, *firstEvent = nil;
 	const CGFloat spacePerMinute = (_lineY[1] - _lineY[0]) / 60.f;
 	
@@ -781,11 +781,10 @@ static NSString const * const HOURS_24[] = {
 	CGContextBeginPath(c);
 	
 	for (i=0; i < HOURS_IN_DAY; i++) {
-		[HOURS[i] drawInRect: _textRect[i]
-					withFont:self.textFont
-			   lineBreakMode:UILineBreakModeTailTruncation
-				   alignment:UITextAlignmentRight];
-		
+    NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle defaultParagraphStyle] mutableCopy];
+    paragraphStyle.lineBreakMode = NSLineBreakByTruncatingTail;
+    paragraphStyle.alignment = NSTextAlignmentRight;
+    [HOURS[i] drawInRect:_textRect[i] withAttributes: @{NSFontAttributeName: self.textFont, NSParagraphStyleAttributeName: paragraphStyle}];
 		CGContextMoveToPoint(c, _lineX, _lineY[i]);
 		CGContextAddLineToPoint(c, self.bounds.size.width, _lineY[i]);
 	}

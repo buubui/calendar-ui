@@ -51,7 +51,7 @@ NSInteger MAEvent_sortByStartTime(id ev1, id ev2, void *keyForSorting);
 @property (nonatomic,strong) UIColor *textColor;
 @property (nonatomic,strong) NSDictionary *userInfo;
 
-- (unsigned int)durationInMinutes;
-- (unsigned int)minutesSinceMidnight;
+- (unsigned long)durationInMinutes;
+- (unsigned long)minutesSinceMidnight;
 
 @end
